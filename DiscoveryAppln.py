@@ -178,6 +178,9 @@ class DiscoveryAppln():
             self.regstore[tup] = 0
             idx = 0
 
+        #for broker
+        if register_req.role == discovery_pb2.ROLE_PUBLISHER:
+            self.pubset.add((register_req.info.id, register_req.info.addr, register_req.info.port))
 
         idx = self.regstore[tup]
 

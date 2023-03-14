@@ -138,7 +138,7 @@ class DiscoveryMW():
                 events = dict(self.poller.poll(timeout=timeout))
 
                 if self.rep in events:
-                    timeout = self.handle_response()
+                    timeout = self.handle_response_back()
 
                 else:
                     timeout = self.handle_request()
@@ -154,12 +154,12 @@ class DiscoveryMW():
     #################################################################
     # handle an incoming response
     ##################################################################
-    def handle_response(self):
+    def handle_response_back(self):
 
         try:
             self.logger.debug("DiscoveryMW::handle_request")
 
-            bytesRcvd = self.rep.recv()
+            bytesRcvd = self.req.recv()
 
             # now use protobuf to deserialize the bytes
             disc_resp = discovery_pb2.DiscoveryResp()
@@ -216,9 +216,6 @@ class DiscoveryMW():
 
                 elif (disc_resp.msg_type == discovery_pb2.TYPE_CHORD_LOOKUP):
                     timeout = self.upcall_obj.lookup_request_chord(disc_resp.chord_lookup)
-
-                elif (disc_resp.msg_type == discovery_pb2.TYPE_CHORD_LOOKUP_RESP):
-                    timeout = self.upcall_obj.lookup_request_chord_resp(disc_resp.chord_lookup_resp)
 
 
                 else:  # anything else is unrecognizable by this object

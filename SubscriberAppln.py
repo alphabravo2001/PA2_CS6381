@@ -243,12 +243,12 @@ class SubscriberAppln():
         except Exception as e:
             raise e
 
-        ########################################
-        # handle isready response method called as part of upcall
-        #
-        # Also a part of upcall handled by application logic
-        ########################################
 
+    ########################################
+    # handle isready response method called as part of upcall
+    #
+    # Also a part of upcall handled by application logic
+    ########################################
     def isready_response(self, isready_resp):
         ''' handle isready response '''
 

@@ -34,6 +34,7 @@ import zmq  # ZMQ sockets
 from CS6381_MW import discovery_pb2
 
 import time
+import json
 
 
 # from CS6381_MW import topic_pb2  # you will need this eventually
@@ -102,7 +103,14 @@ class PublisherMW():
             self.logger.debug("PublisherMW::configure - connect to Discovery service")
             # For our assignments we will use TCP. The connect string is made up of
             # tcp:// followed by IP addr:port number.
-            connect_str = "tcp://" + args.discovery
+
+            f_ = open("dht.json")
+            temp = json.loads(f_.read())["dht"]
+
+            addr = temp["disc1"]["IP"]
+            port = temp["disc1"]["port"]
+
+            connect_str = "tcp://{}:{}".format(addr, port)
             self.req.connect(connect_str)
 
             # Since we are the publisher, the best practice as suggested in ZMQ is for us to

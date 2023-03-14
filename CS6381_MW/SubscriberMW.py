@@ -63,6 +63,7 @@ class SubscriberMW():
         self.port = None  # port num where we are going to publish our topics
         self.upcall_obj = None  # handle to appln obj to handle appln-specific data
         self.handle_events = True  # in general we keep going thru the event loop
+        self.name = None
 
         # used to track logging statistics
         self.toggle = None
@@ -80,6 +81,8 @@ class SubscriberMW():
         try:
             # Here we initialize any internal variables
             self.logger.debug("SubcriberMW::configure")
+
+            self.name = args.name
 
             # First retrieve our advertised IP addr and the publication port num
             self.port = int(args.port)
@@ -110,10 +113,16 @@ class SubscriberMW():
             # Now connect ourselves to the discovery service. Recall that the IP/port were
             # supplied in our argument parsing.
             self.logger.debug("SubcriberMW::configure - connect to Discovery service")
+
             # For these assignments we use TCP. The connect string is made up of
             # tcp:// followed by IP addr:port number.
-            connect_str = "tcp://" + args.discovery
-            self.req.connect(connect_str)
+
+            f_ = open("dht.json")
+            temp = json.loads(f_.read())["dht"]
+
+            addr = temp["disc1"]["IP"]
+            port = temp["disc1"]["port"]
+            bind_string = "tcp://{}:{}".format(addr, port)
 
 
         except Exception as e:
@@ -243,8 +252,8 @@ class SubscriberMW():
             self.logger.info("SubcriberMW::plz_lookup")
 
             lookup_req = discovery_pb2.LookupPubByTopicReq()
-
             lookup_req.topiclist[:] = topiclist
+            lookup_req.subname = self.name
 
             disc_req = discovery_pb2.DiscoveryReq()
             disc_req.lookup_req.CopyFrom(lookup_req)

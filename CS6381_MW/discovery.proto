@@ -35,6 +35,10 @@ enum MsgTypes {
      TYPE_ISREADY = 2;    // needed by publisher to know if it can proceed
      TYPE_LOOKUP_PUB_BY_TOPIC = 3;  // needed by a subscriber
      TYPE_LOOKUP_ALL_PUBS = 4;   // probably needed by broker
+     TYPE_CHORD_REGISTER = 5;
+     TYPE_CHORD_LOOKUP = 6;
+     TYPE_CHORD_LOOKUP_RESP = 7;
+     TYPE_REGISTER_CHORD_RESP = 8;
      // anything more
 }
 
@@ -61,6 +65,14 @@ message RegisterResp
 {
     Status status = 1;   // success or failure
     optional string reason = 2; // reason for failure
+}
+
+message RegisterChordResp
+{
+    Role role = 1;   // enum indicating what role we are playing
+    RegistrantInfo info = 2; // info about the registrant
+    repeated string topiclist = 3; // an array of topic names (published or subscribed to)
+
 }
 
 // define a message type that publishers might send to a discovery service
@@ -100,6 +112,7 @@ message RegisterPubsResp
 message LookupPubByTopicReq
 {
     repeated string topiclist = 1; // modify this appropriately
+    string subname = 2;
 }
 
 // TO-DO
@@ -126,8 +139,10 @@ message DiscoveryReq
               IsReadyReq isready_req = 3;
               LookupPubByTopicReq lookup_req = 4;
               RegisterPubsReq pubs_req = 5;
-              // add more
+              DiscoveryChordRegReq chord_req = 6;
+              DiscoveryChordLookupReq chord_lookup = 7;
         }
+
 }
 
 // Response to discovery req will be similar oneof of the responses.
@@ -137,9 +152,39 @@ message DiscoveryResp
         oneof Content {
               RegisterResp register_resp = 2;
               IsReadyResp isready_resp = 3;
-              LookupPubByTopicResp lookup_resp = 4;
+              DiscoveryChordLookupResp lookup_resp = 4;
               RegisterPubsResp pubs_resp = 5;
-              // add more 
+              RegisterChordResp chord_register_resp = 6;
+              DiscoveryChordLookupResp chord_lookup_resp = 7;
         }
 }
 
+
+message DiscoveryChordRegReq
+{
+  Role role = 1;   // enum indicating what role we are playing
+  RegistrantInfo info = 2; // info about the registrant
+  string topic = 3; // string of topic name (published or subscribed to)
+
+}
+
+message DiscoveryChordRegResp
+{
+  Status status = 1; // yes or no
+}
+
+
+message DiscoveryChordLookupReq
+{
+  repeated string topiclist = 1; // modify this appropriately
+  string subname = 2;
+  string topic = 3;
+}
+
+message DiscoveryChordLookupResp
+{
+  Status status = 1; // yes or no
+  repeated RegistrantInfo array = 2;
+  string subname = 3;
+  repeated string topiclist = 4; // modify this appropriately
+}

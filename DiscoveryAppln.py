@@ -126,6 +126,8 @@ class DiscoveryAppln():
             for a in temp:
                 self.arr.append(a["hash"])
 
+            self.arr.sort()
+
 
         except Exception as e:
             raise e
@@ -186,6 +188,8 @@ class DiscoveryAppln():
 
         topic = register_req.topiclist[idx]
 
+        self.logger.info("DiscoveryAppln::Initial register request - finding hashvalue for topic" )
+
         newhash = Common.chord(topic, self.hashval, self.hmfinger, self.arr)
         retobj = self.disclookup[newhash]
 
@@ -195,19 +199,19 @@ class DiscoveryAppln():
 
         disc_req = discovery_pb2.DiscoveryReq()
 
-        chord_req = discovery_pb2.DiscoveryChordRegReq
+        chord_req = discovery_pb2.DiscoveryChordRegReq()
         chord_req.role = register_req.role
 
-        reg = discovery_pb2.RegistrantInfo
+        reg = discovery_pb2.RegistrantInfo()
         reg.id = id
-        reg.addr = ip
+        reg.addr = str(ip)
         reg.port = port
-        chord_req.info = reg
+        chord_req.info.CopyFrom(register_req.info)
+        chord_req.topiclist[:] = register_req.topiclist
 
         chord_req.topic = topic
         disc_req.chord_req.CopyFrom(chord_req)
         disc_req.msg_type = discovery_pb2.TYPE_CHORD_REGISTER
-
 
         self.regstore[tup] += 1
 
@@ -220,7 +224,7 @@ class DiscoveryAppln():
         # TOPICS 2 PUBs
         # PUBS : SET( (ip, port) )
 
-        self.logger.info("DiscoveryAppln::register request started")
+        self.logger.info("DiscoveryAppln::register chord request started")
 
         try:
             if register_req.role == discovery_pb2.ROLE_PUBLISHER:
@@ -236,19 +240,19 @@ class DiscoveryAppln():
                 if (register_req.info.id,register_req.info.addr,register_req.info.port) not in self.pubset:
                     self.pubset.add((register_req.info.id,register_req.info.addr,register_req.info.port))
 
+
                 chord_resp = discovery_pb2.RegisterChordResp()
-                chord_resp.topiclist.CopyFrom(register_req.topiclist)
-                chord_resp.role.CopyFrom(register_req.role)
+                chord_resp.role = register_req.role
                 chord_resp.info.CopyFrom(register_req.info)
+                chord_resp.topiclist[:] = register_req.topiclist
 
                 disc_req = discovery_pb2.DiscoveryResp()
-                disc_req.chord_register_resp = chord_resp
+                disc_req.chord_register_resp.CopyFrom(chord_resp)
                 disc_req.msg_type = discovery_pb2.TYPE_REGISTER_CHORD_RESP
 
                 self.mw_obj.handle_response(disc_req)
 
             elif register_req.role == discovery_pb2.ROLE_SUBSCRIBER:
-
                 topic = register_req.topic
 
                 if topic not in self.hm2:
@@ -260,12 +264,12 @@ class DiscoveryAppln():
                                                register_req.info.port))
 
                 chord_resp = discovery_pb2.RegisterChordResp()
-                chord_resp.topiclist.CopyFrom(register_req.topiclist)
-                chord_resp.role.CopyFrom(register_req.role)
+                chord_resp.role = register_req.role
                 chord_resp.info.CopyFrom(register_req.info)
+                chord_resp.topiclist[:] = register_req.topiclist
 
                 disc_req = discovery_pb2.DiscoveryResp()
-                disc_req.chord_register_resp = chord_resp
+                disc_req.chord_register_resp.CopyFrom(chord_resp)
                 disc_req.msg_type = discovery_pb2.TYPE_REGISTER_CHORD_RESP
 
                 self.mw_obj.handle_response(chord_resp)
@@ -277,18 +281,18 @@ class DiscoveryAppln():
                 self.broker_port = register_req.info.port
 
                 chord_resp = discovery_pb2.RegisterChordResp()
-                chord_resp.topiclist.CopyFrom(register_req.topiclist)
-                chord_resp.role.CopyFrom(register_req.role)
+                chord_resp.role = register_req.role
                 chord_resp.info.CopyFrom(register_req.info)
+                chord_resp.topiclist[:] = register_req.topiclist
 
                 disc_req = discovery_pb2.DiscoveryResp()
-                disc_req.chord_register_resp = chord_resp
+                disc_req.chord_register_resp.CopyFrom(chord_resp)
                 disc_req.msg_type = discovery_pb2.TYPE_REGISTER_CHORD_RESP
 
                 self.mw_obj.handle_response(chord_resp)
 
 
-            self.logger.info("DiscoveryAppln::register completed")
+            self.logger.info("DiscoveryAppln::register completed - chord")
 
         except Exception as e:
             raise e
@@ -296,6 +300,8 @@ class DiscoveryAppln():
 
 
     def register_request_chord_resp(self, chord_resp):
+
+        self.logger.info("DiscoveryAppln:: response started to chord request")
 
         try:
             tup = (chord_resp.info.id, chord_resp.info.addr, chord_resp.info.port)
@@ -305,9 +311,14 @@ class DiscoveryAppln():
             # send back to requesting pub/sub
             if idx == len(chord_resp.topiclist):
 
-                disc_resp = discovery_pb2.DiscoveryReq()
-                ready_resp = discovery_pb2.RegisterResp
+                self.logger.info("DiscoveryAppln:: sending response to publisher/subscriber")
+
+                disc_resp = discovery_pb2.DiscoveryResp()
+                ready_resp = discovery_pb2.RegisterResp()
+
                 ready_resp.status = discovery_pb2.STATUS_SUCCESS
+                disc_resp.msg_type = discovery_pb2.TYPE_REGISTER
+                disc_resp.register_resp.CopyFrom(ready_resp)
 
                 if chord_resp.role == discovery_pb2.ROLE_PUBLISHER:
                     self.cur_pubs += 1
@@ -317,10 +328,11 @@ class DiscoveryAppln():
                 self.mw_obj.handle_response(ready_resp)
 
             else:
+                self.logger.info("DiscoveryAppln:: sending response back to discovery loop")
                 register_req = discovery_pb2.RegisterReq()
-                register_req.role.CopyFrom(chord_resp.role)
+                register_req.role = chord_resp.role
                 register_req.info.CopyFrom(chord_resp.info)
-                register_req.topiclist.CopyFrom(chord_resp.topiclist)
+                register_req.topiclist[:] = chord_resp.topiclist
 
                 disc_req = discovery_pb2.DiscoveryReq()  # allocate
                 disc_req.msg_type = discovery_pb2.TYPE_REGISTER  # set message type
@@ -512,7 +524,7 @@ class DiscoveryAppln():
         else:
 
             lookup_req = discovery_pb2.LookupPubByTopicReq()
-            lookup_req.topiclist.CopyFrom(chord_lookup_resp.topiclist)
+            lookup_req.topiclist[:] = chord_lookup_resp.topiclist
             lookup_req.subname = chord_lookup_resp.suname
 
             disc_req = discovery_pb2.DiscoveryReq()
@@ -567,10 +579,10 @@ def parseCmdLineArgs():
         # using, what is our endpoint (i.e., port where we are going to bind at the
         # ZMQ level)
 
-        parser.add_argument("-P", "--pubs", type=int, default=1,
+        parser.add_argument("-P", "--pubs", type=int, default=2,
                             help="total number of publishers the system")
 
-        parser.add_argument("-S", "--subs", type=int, default=1,
+        parser.add_argument("-S", "--subs", type=int, default=0,
                             help="total number of subscribers the system")
 
         parser.add_argument("-c", "--config", default="config.ini", help="configuration file (default: config.ini)")
@@ -579,7 +591,7 @@ def parseCmdLineArgs():
                             choices=[logging.DEBUG, logging.INFO, logging.WARNING, logging.ERROR, logging.CRITICAL],
                             help="logging level, choices 10,20,30,40,50: default 20=logging.INFO")
 
-        parser.add_argument("-p", "--port", type=int, default=5355,
+        parser.add_argument("-p", "--port", type=int, default=5555,
                             help="Port number on which our underlying publisher ZMQ service runs, default=5555")
 
         parser.add_argument("-n", "--name", default = "disc1",
@@ -587,6 +599,9 @@ def parseCmdLineArgs():
 
         parser.add_argument("-j", "--jsonfile", default="dht.json",
                             help="json file")
+
+        parser.add_argument("-lm", "--iflocal", type= bool, default= True,
+                            help="local or mn")
 
 
 
@@ -622,7 +637,7 @@ def main():
         disc_app.driver()
 
     except Exception as e:
-        logger.error("Exception caught in main - {}".format(e))
+        logger.exception("Exception caught in main - {}".format(e))
         return
 
 

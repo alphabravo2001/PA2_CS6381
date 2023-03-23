@@ -329,13 +329,13 @@ def parseCmdLineArgs():
         # using, what is our endpoint (i.e., port where we are going to bind at the
         # ZMQ level)
 
-        parser.add_argument("-n", "--name", default="sub",
+        parser.add_argument("-n", "--name", default="sub1",
                             help="Some name assigned to us. Keep it unique per publisher")
 
         parser.add_argument("-a", "--addr", default="localhost",
                             help="IP addr of this publisher to advertise (default: localhost)")
 
-        parser.add_argument("-p", "--port", default=1111,
+        parser.add_argument("-p", "--port", type=int, default=1111,
                             help="Port number on which our underlying publisher ZMQ service runs, default=5577")
 
         parser.add_argument("-d", "--discovery", default="localhost:5555",

@@ -107,10 +107,13 @@ class PublisherMW():
             f_ = open("dht.json")
             temp = json.loads(f_.read())["dht"]
 
-            addr = temp["disc1"]["IP"]
-            port = temp["disc1"]["port"]
+            for arr in temp:
+                if arr["id"] == "disc1":
 
-            connect_str = "tcp://{}:{}".format(addr, port)
+                    addr = arr["IP"]
+                    port = arr["port"]
+
+            connect_str = "tcp://" + "localhost:" + str(port)
             self.req.connect(connect_str)
 
             # Since we are the publisher, the best practice as suggested in ZMQ is for us to
@@ -237,12 +240,12 @@ class PublisherMW():
             # The following code shows serialization using the protobuf generated code.
 
             # Build the Registrant Info message first.
-            self.logger.debug("PublisherMW::register - populate the Registrant Info")
+            self.logger.info("PublisherMW::register - populate the Registrant Info")
             reg_info = discovery_pb2.RegistrantInfo()  # allocate
             reg_info.id = name  # our id
             reg_info.addr = self.addr  # our advertised IP addr where we are publishing
-            reg_info.port = self.port  # port on which we are publishing
-            self.logger.debug("PublisherMW::register - done populating the Registrant Info")
+            reg_info.port = str(self.port)  # port on which we are publishing
+            self.logger.info("PublisherMW::register - done populating the Registrant Info")
 
             # Next build a RegisterReq message
             self.logger.debug("PublisherMW::register - populate the nested register req")

@@ -21,44 +21,57 @@ import hashlib  # for the secure hash library
 import argparse # argument parsing
 import json # for JSON
 import logging # for logging. Use it in place of print statements.
+import random
 
 bits_hash = 8
-
-def chord(target, cur, fingerhm, arr):
-    topichash = hashtopic(target)
-
-    cpnode = search(topichash, cur, fingerhm, arr)
-
-    return fingerhm[cpnode][0]["hash"]
-
-
-def search(target,cur,hm,arr):
-
-    if target > cur and target <= hm[cur][0]["hash"]:
-        return hm[cur][0]["hash"]
-
-    else:
-        newcur = closestpreceding(cur, arr)
-        return search(target, newcur, hm, arr)
-
-
-def closestpreceding(cur,arr):
-
-    if cur > arr[-1]:
-        return arr[0]
-
-    else:
-        for hash in arr:
-            if cur < hash:
-                return hash
-
 
 def hashtopic(hash):
     # first get the digest from hashlib and then take the desired number of bytes from the
     # lower end of the 256 bits hash. Big or little endian does not matter.
-    hash_digest = hashlib.sha256(bytes(id, "utf-8")).digest()  # this is how we get the digest or hash value
+    hash_digest = hashlib.sha256(bytes(hash, "utf-8")).digest()  # this is how we get the digest or hash value
     # figure out how many bytes to retrieve
     num_bytes = int(bits_hash / 8)  # otherwise we get float which we cannot use below
     hash_val = int.from_bytes(hash_digest[:num_bytes], "big")  # take lower N number of bytes
 
     return hash_val
+
+
+def chord(target, cur, fingerhm, arr):
+
+    topichash = hashtopic(target)
+
+    cpnode = search(topichash, cur, fingerhm, arr)
+
+    return cpnode
+
+
+def search(target,cur,hm,arr):
+
+    cur = str(cur)
+    high = int(hm[cur]['1']["hash"])
+    print("FAG  ", target, " ", cur, " ", high)
+    cur = int(cur)
+
+    if target > arr[-1]:
+        return int(hm[str(arr[-1])]['1']["hash"])
+
+
+    elif target >= cur and target <= high:
+        return int(hm[str(cur)]['1']["hash"])
+
+    else:
+        newcur = closestpreceding(target, arr)
+        return search(target, newcur, hm, arr)
+
+
+def closestpreceding(cur,arr):
+
+    if cur >= arr[-1]:
+        return arr[0]
+
+    else:
+        for val in arr[::-1]:
+            print ("MidVAL ", val," ", cur, " ", cur>=val)
+            if cur >= val:
+                print ("NEWVAL ", val)
+                return val

@@ -52,6 +52,8 @@ class DiscoveryMW():
         self.hashval = None
         self.arr = []
 
+        self.l = None
+
 
 
     def configure(self, args):
@@ -65,6 +67,7 @@ class DiscoveryMW():
             self.port = args.port
             self.addr = "10.0.0.1:5555"
             self.name = args.name
+            self.l = args.iflocal
 
             # Next get the ZMQ context
             self.logger.debug("DiscoveryMW::configure - obtain ZMQ context")
@@ -99,7 +102,11 @@ class DiscoveryMW():
                     addr = arr["IP"]
                     port = arr["port"]
 
-                    bind_string = "tcp://{}:{}".format(addr, port)
+                    if self.l:
+                        bind_string = "tcp://*:" + str(port)
+                        print ("cur ", bind_string)
+                    else:
+                        bind_string = "tcp://{}:{}".format(addr, port)
 
                     self.rep.bind(bind_string)
 
@@ -109,12 +116,19 @@ class DiscoveryMW():
             for arr in temp:
                 if arr["hash"] not in self.reqdict:
                     self.reqdict[arr["hash"]] = context.socket(zmq.REQ)
+                    self.poller.register(self.reqdict[arr["hash"]], zmq.POLLIN)
                     name = arr["id"]
 
                     addr = arr["IP"]
                     port = arr["port"]
-                    bind_string = "tcp://{}:{}".format(addr, port)
-                    self.reqdict[arr["hash"]].bind(bind_string)
+
+                    if self.l:
+                        bind_string = "tcp://" + "localhost:" + str(port)
+                        #bind_string = "tcp://*:" + str(port)
+                    else:
+                        bind_string = "tcp://{}:{}".format(addr, port)
+
+                    self.reqdict[arr["hash"]].connect(bind_string)
 
 
             self.logger.info("DiscoveryMW::configure completed")
@@ -137,10 +151,11 @@ class DiscoveryMW():
                 # The return value is a socket to event mask mapping
                 events = dict(self.poller.poll(timeout=timeout))
 
-                if self.rep in events:
-                    timeout = self.handle_response_back()
+                for ev in self.reqdict.values():
+                    if ev in events:
+                        timeout = self.handle_response_back(ev)
 
-                else:
+                if self.rep in events:
                     timeout = self.handle_request()
 
 
@@ -154,22 +169,25 @@ class DiscoveryMW():
     #################################################################
     # handle an incoming response
     ##################################################################
-    def handle_response_back(self):
+    def handle_response_back(self, ev):
 
         try:
             self.logger.debug("DiscoveryMW::handle_request")
 
-            bytesRcvd = self.req.recv()
+            for key in self.reqdict:
+                if self.reqdict[key] == ev:
 
-            # now use protobuf to deserialize the bytes
-            disc_resp = discovery_pb2.DiscoveryResp()
-            disc_resp.ParseFromString(bytesRcvd)
+                    bytesRcvd = self.reqdict[key].recv()
 
-            if (disc_resp.msg_type == discovery_pb2.TYPE_REGISTER_CHORD_RESP):
-                timeout = self.upcall_obj.register_request_chord_resp(disc_resp.chord_register_resp)
+                    # now use protobuf to deserialize the bytes
+                    disc_resp = discovery_pb2.DiscoveryResp()
+                    disc_resp.ParseFromString(bytesRcvd)
 
-            elif (disc_resp.msg_type == discovery_pb2.TYPE_CHORD_LOOKUP_RESP):
-                timeout = self.upcall_obj.lookup_request_chord_resp(disc_resp.chord_lookup_resp)
+                    if (disc_resp.msg_type == discovery_pb2.TYPE_REGISTER_CHORD_RESP):
+                        timeout = self.upcall_obj.register_request_chord_resp(disc_resp.chord_register_resp)
+
+                    elif (disc_resp.msg_type == discovery_pb2.TYPE_CHORD_LOOKUP_RESP):
+                        timeout = self.upcall_obj.lookup_request_chord_resp(disc_resp.chord_lookup_resp)
 
         except Exception as e:
             raise e
@@ -181,7 +199,7 @@ class DiscoveryMW():
     def handle_request(self):
 
         try:
-                self.logger.debug("DiscoveryMW::handle_request")
+                self.logger.info("DiscoveryMW::handle_request")
 
                 # let us first receive all the bytes
                 bytesRcvd = self.rep.recv()
@@ -240,7 +258,7 @@ class DiscoveryMW():
     ##################################################################
     def handle_chord_req(self, req, hash):
         buf2send = req.SerializeToString()
-        self.logger.info("Stringified serialized buf = {}".format(buf2send))
+        self.logger.info("Chord req: Stringified serialized buf = {}".format(buf2send))
         self.reqdict[hash].send(buf2send) # we use the "send" method of ZMQ that sends the bytes
 
 

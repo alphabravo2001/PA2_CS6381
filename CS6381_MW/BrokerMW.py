@@ -28,6 +28,7 @@ import zmq  # ZMQ sockets
 
 # import serialization logic
 from CS6381_MW import discovery_pb2
+import json
 
 
 class BrokerMW():
@@ -89,7 +90,16 @@ class BrokerMW():
             self.logger.debug("BrokerMW::configure - connect to Discovery service")
             # For our assignments we will use TCP. The connect string is made up of
             # tcp:// followed by IP addr:port number.
-            connect_str = "tcp://" + args.discovery
+
+            f_ = open("dht.json")
+            temp = json.loads(f_.read())["dht"]
+
+            for arr in temp:
+                if arr["id"] == "disc1":
+                    addr = arr["IP"]
+                    port = arr["port"]
+
+            connect_str = "tcp://" + "localhost:" + str(port)
             self.req.connect(connect_str)
 
             self.logger.debug("BrokerMW::configure - bind to the pub socket")
@@ -167,7 +177,7 @@ class BrokerMW():
                 reg_info = discovery_pb2.RegistrantInfo()  # allocate
                 reg_info.id = name  # our id
                 reg_info.addr = self.addr  # our advertised IP addr where we are publishing
-                reg_info.port = self.port  # port on which we are subscribing
+                reg_info.port = str(self.port)  # port on which we are subscribing
                 self.logger.debug("BrokerMW::register - done populating the Registrant Info")
 
                 self.topiclist = topiclist

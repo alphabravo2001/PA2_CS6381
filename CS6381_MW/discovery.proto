@@ -47,7 +47,7 @@ enum MsgTypes {
 message RegistrantInfo {
     string id = 1;  // name of the entity
     optional string addr = 2; // IP address (only for publisher)
-    optional uint32 port = 3; // port number (only for publisher)
+    optional string port = 3; // port number (only for publisher)
 }
 
 // Likewise, instead of just comma separated list of topics, maybe a better way to send the topic list
@@ -165,12 +165,15 @@ message DiscoveryChordRegReq
   Role role = 1;   // enum indicating what role we are playing
   RegistrantInfo info = 2; // info about the registrant
   string topic = 3; // string of topic name (published or subscribed to)
+  repeated string topiclist = 4;
 
 }
 
 message DiscoveryChordRegResp
 {
-  Status status = 1; // yes or no
+  Role role = 1;   // enum indicating what role we are playing
+  RegistrantInfo info = 2; // info about the registrant
+  string topic = 3; // string of topic name (published or subscribed to)
 }
 
 

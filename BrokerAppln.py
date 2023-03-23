@@ -331,13 +331,13 @@ def parseCmdLineArgs():
   parser.add_argument("-a", "--addr", default="localhost",
                       help="IP addr of this publisher to advertise (default: localhost)")
 
-  parser.add_argument("-p", "--port", type=int, default=5570,
+  parser.add_argument("-p", "--port", type=int, default=5999,
                       help="Port number on which our underlying publisher ZMQ service runs, default=5577")
 
   parser.add_argument("-d", "--discovery", default="localhost:5555",
                       help="IP Addr:Port combo for the discovery service, default localhost:5555")
 
-  parser.add_argument("-T", "--num_topics", type=int, choices=range(1, 10), default=9,
+  parser.add_argument("-T", "--num_topics", type=int, choices=range(0, 10), default=9,
                       help="Number of topics to publish, currently restricted to max of 9")
 
   parser.add_argument("-c", "--config", default="config.ini", help="configuration file (default: config.ini)")
@@ -385,7 +385,7 @@ def main():
     driver_app.driver()
 
   except Exception as e:
-    logger.error("Exception caught in main - {}".format(e))
+    logger.exception("Exception caught in main - {}".format(e))
     return
 
 

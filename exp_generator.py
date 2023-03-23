@@ -381,13 +381,13 @@ def parseCmdLineArgs ():
   
   # Now specify all the optional arguments we support
   #
-  parser.add_argument ("-b", "--bits_hash", type=int, choices=[8,16,24,32,40,48,56,64], default=48, help="Number of bits of hash value to test for collision: allowable values between 6 and 64 in increments of 8 bytes, default 48")
+  parser.add_argument ("-b", "--bits_hash", type=int, choices=[8,16,24,32,40,48,56,64], default=8, help="Number of bits of hash value to test for collision: allowable values between 6 and 64 in increments of 8 bytes, default 48")
 
-  parser.add_argument ("-D", "--num_disc_dht", type=int, default=5, help="Number of Discovery DHT instances, default 20")
+  parser.add_argument ("-D", "--num_disc_dht", type=int, default=3, help="Number of Discovery DHT instances, default 20")
 
-  parser.add_argument ("-P", "--num_pub", type=int, default=5, help="number of publishers, default 5")
+  parser.add_argument ("-P", "--num_pub", type=int, default=3, help="number of publishers, default 5")
   
-  parser.add_argument ("-S", "--num_sub", type=int, default=5, help="number of subscribers, default 5")
+  parser.add_argument ("-S", "--num_sub", type=int, default=3, help="number of subscribers, default 5")
 
   parser.add_argument ("-d", "--disc_base_port", type=int, default=5555, help="base port for discovery, default 5555")
 

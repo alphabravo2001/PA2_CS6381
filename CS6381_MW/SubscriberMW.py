@@ -120,9 +120,14 @@ class SubscriberMW():
             f_ = open("dht.json")
             temp = json.loads(f_.read())["dht"]
 
-            addr = temp["disc1"]["IP"]
-            port = temp["disc1"]["port"]
-            bind_string = "tcp://{}:{}".format(addr, port)
+            for arr in temp:
+                if arr["id"] == "disc1":
+
+                    addr = arr["IP"]
+                    port = arr["port"]
+
+            connect_str = "tcp://" + "localhost:" + str(port)
+            self.req.connect(connect_str)
 
 
         except Exception as e:
@@ -150,7 +155,7 @@ class SubscriberMW():
             reg_info = discovery_pb2.RegistrantInfo()  # allocate
             reg_info.id = name  # our id
             reg_info.addr = self.addr  # our advertised IP addr where we are publishing
-            reg_info.port = self.port  # port on which we are subscribing
+            reg_info.port = str(self.port)  # port on which we are subscribing
             self.logger.debug("SubcriberMW::register - done populating the Registrant Info")
 
             self.topiclist = topiclist

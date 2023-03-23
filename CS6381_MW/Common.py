@@ -49,7 +49,6 @@ def search(target,cur,hm,arr):
 
     cur = str(cur)
     high = int(hm[cur]['1']["hash"])
-    print("FAG  ", target, " ", cur, " ", high)
     cur = int(cur)
 
     if target > arr[-1]:
@@ -71,7 +70,5 @@ def closestpreceding(cur,arr):
 
     else:
         for val in arr[::-1]:
-            print ("MidVAL ", val," ", cur, " ", cur>=val)
             if cur >= val:
-                print ("NEWVAL ", val)
                 return val

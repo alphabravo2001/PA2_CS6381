@@ -33,7 +33,7 @@ for key in hm:
 
 
 #data for broker
-for i in range( int(len(iters)/2), len(iters)-1):
+for i in range( int(len(iters)/2), len(iters)):
     filename = iters[i]
 
     f = open(filename)

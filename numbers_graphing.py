@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 hm = {}   #direct
 hm2 = {}  #broker
 
-x_axis = [1,3,7,11]
+x_axis = [3,15,30]
 
 iters = sys.argv[1:]
 x_idx = 0

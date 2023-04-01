@@ -388,7 +388,7 @@ def parseCmdLineArgs():
   parser.add_argument("-d", "--discovery", default="localhost:5555",
                       help="IP Addr:Port combo for the discovery service, default localhost:5555")
 
-  parser.add_argument("-T", "--num_topics", type=int, choices=range(1, 10), default=5,
+  parser.add_argument("-T", "--num_topics", type=int, choices=range(1, 10), default=7,
                       help="Number of topics to publish, currently restricted to max of 9")
 
   parser.add_argument("-c", "--config", default="config.ini", help="configuration file (default: config.ini)")

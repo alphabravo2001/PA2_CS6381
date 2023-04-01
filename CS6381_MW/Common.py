@@ -40,9 +40,19 @@ def chord(target, cur, fingerhm, arr):
 
     topichash = hashtopic(target)
 
+    #uncommented for debugging
+    if int(topichash) < 100:
+        return 10
+    elif 100 < int(topichash) < 300:
+        return 183
+    else:
+        return 193
+
+
     cpnode = search(topichash, cur, fingerhm, arr)
 
-    return cpnode
+    print ("Chord algorithm - Hash of Discovery: ", cpnode, "   ", "Hash value of input topic: ", topichash, "   ", "Topic Name: ", target)
+    return int(cpnode)
 
 
 def search(target,cur,hm,arr):

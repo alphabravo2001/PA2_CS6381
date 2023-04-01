@@ -582,7 +582,7 @@ def parseCmdLineArgs():
         parser.add_argument("-P", "--pubs", type=int, default=2,
                             help="total number of publishers the system")
 
-        parser.add_argument("-S", "--subs", type=int, default=0,
+        parser.add_argument("-S", "--subs", type=int, default=1,
                             help="total number of subscribers the system")
 
         parser.add_argument("-c", "--config", default="config.ini", help="configuration file (default: config.ini)")
